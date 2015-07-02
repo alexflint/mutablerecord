@@ -260,7 +260,7 @@ def make_mutable_type(typename, **members):
         MutableRecord.__init__(self, members, **kwargs)
 
     bases = (MutableRecord,)
-    dict = {'__init__': __init__}
+    dict = {'__init__': __init__, '__slots__': members.keys()}
     result_type = type(typename, bases, dict)
     result_type.List = make_mutable_list_type(typename+'List', result_type, members)
     result_type.Members = members
