@@ -259,7 +259,6 @@ class MetaclassTest(unittest.TestCase):
 			a = Required
 			def bar(self):
 				return self.a + 1
-
 		f = Foo(a=1)
 		self.assertEqual(f.bar(), 2)
 
@@ -269,7 +268,6 @@ class MetaclassTest(unittest.TestCase):
 			@property
 			def bar(self):
 				return self.a + 1
-
 		f = Foo(a=1)
 		self.assertEqual(f.bar, 2)
 
@@ -279,8 +277,16 @@ class MetaclassTest(unittest.TestCase):
 			@classmethod
 			def bar(self):
 				return "bar"
-
 		self.assertEqual(Foo.bar(), "bar")
+
+	def test_member_class(self):
+		class Foo(object, metaclass=MutableRecordType):
+			a = Required
+			class Bar(object):
+				def __init__(self, x):
+					self.x = x
+		b = Foo.Bar(1)
+		self.assertEqual(b.x, 1)
 
 if __name__ == '__main__':
 	unittest.main()
