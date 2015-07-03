@@ -52,6 +52,17 @@ class MutableRecordTest(unittest.TestCase):
 		f = Foo(a="a")
 		self.assertEqual(f.a, "a")
 
+	def test_length(self):
+		Foo = make_mutable_type("Foo", a=Length(3))
+		with self.assertRaises(DataError):
+			f = Foo()
+		with self.assertRaises(DataError):
+			f = Foo(a=1)
+		with self.assertRaises(DataError):
+			f = Foo(a=[1, 2])
+		f = Foo(a=[1, 2, 3])
+		self.assertEqual(f.a, [1, 2, 3])
+
 	def test_simple_record(self):
 		Foo = make_mutable_type("Foo", a=1, b=2)
 		f1 = Foo(a=123)

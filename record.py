@@ -90,6 +90,25 @@ class OneOf(Validator):
             raise DataError('%s is not a valid value for %s' % (value, field_name))
 
 
+class Length(Validator):
+    """
+    Requires that a member have a certain length
+    """
+    def __init__(self, n, default=None):
+        super(Length, self).__init__(default)
+        self._n = n
+
+    def validate(self, value, field_name):
+        if value is None and self.default is not None:
+            # No value was given, and a default was supplied
+            return
+        try:
+            if len(value) != self._n:
+                raise DataError('%s has length %d but expected %d' % (value, len(value), self._n))
+        except TypeError:
+            raise DataError('%s has no length so is not a valid value for %s' % (value, field_name))
+
+
 class MutableRecord(object):
     """
     Base class for all types created by make_mutable_type.
