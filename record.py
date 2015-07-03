@@ -114,8 +114,8 @@ class MutableRecord(object):
     """
     Base class for all types created by make_mutable_type.
     """
-    def __init__(self, members, **kwargs):
-        self._members = members
+    def __init__(self, **kwargs):
+        self._members = type(self).members
         for key, spec in members.items():
             # Resolve validator and default value
             if isinstance(spec, Validator):
@@ -283,7 +283,7 @@ def make_mutable_type(typename, **members):
     dict = {'__init__': __init__, '__slots__': members.keys()}
     result_type = type(typename, bases, dict)
     result_type.List = make_mutable_list_type(typename+'List', result_type, **members)
-    result_type.Members = members
+    result_type.members = members
     return result_type
 
 
@@ -329,5 +329,5 @@ class MutableRecordType(type):
 
         result_type = super(MutableRecordType, mcl).__new__(mcl, name, bases, memberfuncs)
         result_type.List = make_mutable_list_type(name+'List', result_type, **memberattrs)
-        result_type.Members = memberattrs
+        result_type.members = memberattrs
         return result_type
