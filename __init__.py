@@ -6,6 +6,7 @@ from .record import \
     InstanceOf, \
     InstanceOrNone, \
     OneOf, \
+    Length, \
     MutableRecord, \
     MutableRecordSet, \
     FieldView, \
