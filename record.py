@@ -1,5 +1,6 @@
 import abc
 import copy
+import types
 import collections
 
 # This is a token used symbolically below
@@ -281,12 +282,12 @@ def make_mutable_type(typename, **members):
     bases = (MutableRecord,)
     dict = {'__init__': __init__, '__slots__': members.keys()}
     result_type = type(typename, bases, dict)
-    result_type.List = make_mutable_list_type(typename+'List', result_type, members)
+    result_type.List = make_mutable_list_type(typename+'List', result_type, **members)
     result_type.Members = members
     return result_type
 
 
-def make_mutable_list_type(typename, value_type, members):
+def make_mutable_list_type(typename, value_type, **members):
     """
     Construct a type with mutable members.
     """
@@ -305,7 +306,28 @@ class MutableRecordType(type):
     def __prepare__(metacls, name, bases): 
         return collections.OrderedDict()
 
-    def __new__(cls, name, bases, clsdict):
+    def __new__(mcl, name, bases, clsdict):
         if any(base is not object for base in bases):
             raise TypeError("MutableRecord types may not be have any base class (base was %s)" % base.__name__)
-        return make_mutable_type(name, **clsdict)
+
+        bases = (MutableRecord,)
+        memberfuncs = {}
+        memberattrs = collections.OrderedDict()
+
+        # Separate the dictionary into functions and nonfunctions
+        for key, val in clsdict.items():
+            if isinstance(val, (types.FunctionType, property)):
+                memberfuncs[key] = val
+            else:
+                memberattrs[key] = val
+
+        def __init__(self, **kwargs):
+            MutableRecord.__init__(self, memberattrs, **kwargs)
+
+        memberfuncs['__init__'] = __init__
+        memberfuncs['__slots__'] = memberattrs.keys()
+
+        result_type = super(MutableRecordType, mcl).__new__(mcl, name, bases, memberfuncs)
+        result_type.List = make_mutable_list_type(name+'List', result_type, **memberattrs)
+        result_type.Members = memberattrs
+        return result_type
