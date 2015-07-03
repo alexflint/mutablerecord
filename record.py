@@ -116,7 +116,7 @@ class MutableRecord(object):
     """
     def __init__(self, **kwargs):
         self._members = type(self).members
-        for key, spec in members.items():
+        for key, spec in self._members.items():
             # Resolve validator and default value
             if isinstance(spec, Validator):
                 validator = spec
@@ -144,7 +144,7 @@ class MutableRecord(object):
 
         # Check for invalid keyword arguments
         for key in kwargs.keys():
-            if key not in members:
+            if key not in self._members:
                 raise DataError('%s is not a member of %s' % (key, type(self).__name__))
 
     def __str__(self):
@@ -276,15 +276,7 @@ def make_mutable_type(typename, **members):
     """
     Construct a type with mutable members.
     """
-    def __init__(self, **kwargs):
-        MutableRecord.__init__(self, members, **kwargs)
-
-    bases = (MutableRecord,)
-    dict = {'__init__': __init__, '__slots__': members.keys()}
-    result_type = type(typename, bases, dict)
-    result_type.List = make_mutable_list_type(typename+'List', result_type, **members)
-    result_type.members = members
-    return result_type
+    return MutableRecordType.__new__(MutableRecordType, typename, (object,), members)
 
 
 def make_mutable_list_type(typename, value_type, **members):
@@ -292,10 +284,10 @@ def make_mutable_list_type(typename, value_type, **members):
     Construct a type with mutable members.
     """
     bases = (MutableRecordSet,)
-    dict = {'value_type': value_type}
+    namespace = {'value_type': value_type}
     for key in members.keys():
-        dict[key+'s'] = FieldViewDescriptor(key)
-    return type(typename, bases, dict)
+        namespace[key+'s'] = FieldViewDescriptor(key)
+    return type(typename, bases, namespace)
 
 
 class MutableRecordType(type):
@@ -311,23 +303,19 @@ class MutableRecordType(type):
             raise TypeError("MutableRecord types may not be have any base class (base was %s)" % base.__name__)
 
         bases = (MutableRecord,)
-        memberfuncs = {}
-        memberattrs = collections.OrderedDict()
+        namespace = {}
+        fields = collections.OrderedDict()
 
         # Separate the dictionary into functions and nonfunctions
         for key, val in clsdict.items():
             if isinstance(val, (types.FunctionType, property)):
-                memberfuncs[key] = val
+                namespace[key] = val
             else:
-                memberattrs[key] = val
+                fields[key] = val
 
-        def __init__(self, **kwargs):
-            MutableRecord.__init__(self, memberattrs, **kwargs)
+        namespace['__slots__'] = fields.keys()
 
-        memberfuncs['__init__'] = __init__
-        memberfuncs['__slots__'] = memberattrs.keys()
-
-        result_type = super(MutableRecordType, mcl).__new__(mcl, name, bases, memberfuncs)
-        result_type.List = make_mutable_list_type(name+'List', result_type, **memberattrs)
-        result_type.members = memberattrs
+        result_type = super(MutableRecordType, mcl).__new__(mcl, name, bases, namespace)
+        result_type.List = make_mutable_list_type(name+'List', result_type, **fields)
+        result_type.members = fields
         return result_type

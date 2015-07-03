@@ -263,6 +263,16 @@ class MetaclassTest(unittest.TestCase):
 		f = Foo(a=1)
 		self.assertEqual(f.bar(), 2)
 
+	def test_property(self):
+		class Foo(object, metaclass=MutableRecordType):
+			a = Required
+			@property
+			def bar(self):
+				return self.a + 1
+
+		f = Foo(a=1)
+		self.assertEqual(f.bar, 2)
+
 
 if __name__ == '__main__':
 	unittest.main()
