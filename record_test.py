@@ -288,5 +288,13 @@ class MetaclassTest(unittest.TestCase):
 		b = Foo.Bar(1)
 		self.assertEqual(b.x, 1)
 
+	def test_members(self):
+		class Foo(object, metaclass=MutableRecordType):
+			a = 3
+			b = "xyz"
+		f=Foo()
+		self.assertListEqual(list(f.members.keys()), ['a', 'b'])
+
+
 if __name__ == '__main__':
 	unittest.main()

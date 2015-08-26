@@ -308,7 +308,7 @@ class MutableRecordType(type):
 
         # Separate the dictionary into functions and nonfunctions
         for key, val in clsdict.items():
-            if isinstance(val, (types.FunctionType, type, classmethod, property)):
+            if key.startswith("__") or isinstance(val, (types.FunctionType, type, classmethod, property)):
                 namespace[key] = val
             else:
                 fields[key] = val
